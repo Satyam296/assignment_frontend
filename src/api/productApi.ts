@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://assignment-backend-1-84be.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://cors-anywhere.herokuapp.com/https://assignment-backend-1-84be.onrender.com';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
