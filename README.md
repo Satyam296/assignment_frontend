@@ -4,7 +4,7 @@ A full-stack web application that displays products with multiple EMI plans back
 
 ## Live Demo
 - Frontend: [https://satyam296.github.io/assignment_frontend/](https://satyam296.github.io/assignment_frontend/)
-- Backend: [https://assignment-backend-zxrv.onrender.com](https://assignment-backend-zxrv.onrender.com)
+- Backend: [https://assignment-backend-1-84be.onrender.com](https://assignment-backend-1-84be.onrender.com)
 
 ## Tech Stack
 
@@ -162,7 +162,7 @@ npm install
 
 3. Create a `.env` file in the root directory and add:
 ```
-VITE_API_BASE_URL=https://assignment-backend-zxrv.onrender.com
+VITE_API_BASE_URL=https://assignment-backend-1-84be.onrender.com
 ```
 
 4. Start the development server

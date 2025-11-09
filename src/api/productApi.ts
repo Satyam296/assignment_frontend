@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://assignment-backend-zxrv.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://assignment-backend-1-84be.onrender.com/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
