@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://assignment-backend-1-84be.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://assignment-backend-1-84be.onrender.com';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -10,12 +10,12 @@ export const apiClient = axios.create({
 });
 
 export const getProducts = async () => {
-  const response = await apiClient.get('/products');
+  const response = await apiClient.get('/api/products');
   return response.data;
 };
 
 export const getProductBySlug = async (slug: string) => {
-  const response = await apiClient.get(`/products/${slug}`);
+  const response = await apiClient.get(`/api/products/${slug}`);
   return response.data;
 };
 
@@ -32,17 +32,17 @@ export const createOrder = async (orderData: {
   interestRate: number;
   cashback?: number;
 }) => {
-  const response = await apiClient.post('/orders', orderData);
+  const response = await apiClient.post('/api/orders', orderData);
   return response.data;
 };
 
 export const getAllOrders = async () => {
-  const response = await apiClient.get('/orders');
+  const response = await apiClient.get('/api/orders');
   return response.data;
 };
 
 export const getOrderById = async (id: string) => {
-  const response = await apiClient.get(`/orders/${id}`);
+  const response = await apiClient.get(`/api/orders/${id}`);
   return response.data;
 };
 
