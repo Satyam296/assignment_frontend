@@ -16,7 +16,8 @@ interface DownpaymentOption {
 }
 
 interface Product {
-  _id: string;
+  id?: string;
+  _id?: string;
   slug: string;
   name: string;
   category: string;
@@ -300,7 +301,7 @@ export const ProductDetail: React.FC = () => {
                     const monthlyPayment = calculateMonthlyPayment();
                     
                     const orderData = {
-                      productId: product._id,
+                      productId: product.id || product._id,
                       productName: product.name,
                       variantId: selectedVariant.id,
                       variantColor: selectedVariant.color,

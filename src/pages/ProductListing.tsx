@@ -4,7 +4,8 @@ import { getProducts } from '../api/productApi';
 import { calculateMonthlyEMI } from '../utils/emiCalculator';
 
 interface Product {
-  _id: string;
+  id?: string;
+  _id?: string;
   slug: string;
   name: string;
   category: string;
@@ -100,7 +101,7 @@ export const ProductListing: React.FC = () => {
               
               return (
                 <div
-                  key={product._id}
+                  key={product.id || product._id}
                   onClick={() => !isOutOfStock && navigate(`/products/${product.slug}`)}
                   className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 text-left cursor-pointer"
                 >

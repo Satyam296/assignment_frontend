@@ -35,19 +35,35 @@ interface LowStockItem {
   price: number;
 }
 
+interface Order {
+  id: string;
+  product_name: string;
+  variant_color?: string;
+  variant_storage?: string;
+  variant_price: number;
+  emi_tenure: number;
+  monthly_payment: number;
+  status: string;
+  expected_delivery_date?: string;
+  created_at: string;
+}
+
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [inventory, setInventory] = useState<ProductInventory[]>([]);
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<ProductInventory | null>(null);
   const [updateStock, setUpdateStock] = useState<{ [key: string]: number }>({});
   const [threshold] = useState(5);
   const [deleteModal, setDeleteModal] = useState<{ show: boolean; productId: string; productName: string }>({ show: false, productId: '', productName: '' });
+  const [activeTab, setActiveTab] = useState<'inventory' | 'orders'>('inventory');
 
   useEffect(() => {
     fetchInventory();
     fetchLowStockItems();
+    fetchOrders();
   }, []);
 
   const fetchInventory = async () => {
@@ -69,6 +85,16 @@ export const AdminDashboard: React.FC = () => {
     } catch (error) {
       console.error('Error fetching low stock items:', error);
       setLowStockItems([]);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/admin/orders`);
+      setOrders(response.data || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      setOrders([]);
     }
   };
 
@@ -107,6 +133,25 @@ export const AdminDashboard: React.FC = () => {
   const totalVariants = inventory?.reduce((sum, p) => sum + (p.variantCount || 0), 0) || 0;
   const totalStock = inventory?.reduce((sum, p) => sum + (p.totalStock || 0), 0) || 0;
   const totalLowStock = lowStockItems?.length || 0;
+  const totalOrders = orders?.length || 0;
+  const pendingOrders = orders?.filter(o => o.status === 'pending').length || 0;
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Not set';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'processing': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'shipped': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'delivered': return 'bg-green-100 text-green-800 border-green-200';
+      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
 
   if (loading) {
     return (
@@ -145,6 +190,40 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Tab Navigation */}
+        <div className="mb-6 border-b border-gray-200">
+          <nav className="flex gap-8">
+            <button
+              onClick={() => setActiveTab('inventory')}
+              className={`pb-4 px-2 font-semibold text-sm transition-colors relative ${
+                activeTab === 'inventory'
+                  ? 'text-teal-600 border-b-2 border-teal-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              📦 Inventory Management
+            </button>
+            <button
+              onClick={() => setActiveTab('orders')}
+              className={`pb-4 px-2 font-semibold text-sm transition-colors relative ${
+                activeTab === 'orders'
+                  ? 'text-teal-600 border-b-2 border-teal-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              🛒 Orders
+              {pendingOrders > 0 && (
+                <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                  {pendingOrders}
+                </span>
+              )}
+            </button>
+          </nav>
+        </div>
+
+        {/* Inventory Tab */}
+        {activeTab === 'inventory' && (
+          <>
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -324,6 +403,101 @@ export const AdminDashboard: React.FC = () => {
             ))}
           </div>
         </div>
+          </>
+        )}
+
+        {/* Orders Tab */}
+        {activeTab === 'orders' && (
+          <>
+            {/* Orders Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <p className="text-sm text-gray-600 mb-1">Total Orders</p>
+                <p className="text-3xl font-bold text-gray-900">{totalOrders}</p>
+              </div>
+              <div className="bg-yellow-50 p-6 rounded-lg shadow-sm border border-yellow-200">
+                <p className="text-sm text-yellow-600 mb-1">Pending Orders</p>
+                <p className="text-3xl font-bold text-yellow-600">{pendingOrders}</p>
+              </div>
+              <div className="bg-teal-50 p-6 rounded-lg shadow-sm border border-teal-200">
+                <p className="text-sm text-teal-600 mb-1">Total Revenue</p>
+                <p className="text-3xl font-bold text-teal-600">
+                  ₹{orders.reduce((sum, o) => sum + (o.variant_price || 0), 0).toLocaleString('en-IN')}
+                </p>
+              </div>
+            </div>
+
+            {/* Orders Table */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-xl font-bold text-gray-900">All Orders</h2>
+              </div>
+              {orders.length === 0 ? (
+                <div className="p-12 text-center">
+                  <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  <p className="text-gray-500 text-lg font-medium">No orders yet</p>
+                  <p className="text-gray-400 text-sm mt-1">Orders will appear here once customers place them</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Order ID</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Product</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Variant</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">EMI</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Order Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Expected Delivery</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {orders.map((order) => (
+                        <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <p className="text-sm font-mono text-gray-600">#{order.id.slice(0, 8)}</p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm font-semibold text-gray-900">{order.product_name}</p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm text-gray-900">
+                              {order.variant_color && <span>{order.variant_color}</span>}
+                              {order.variant_color && order.variant_storage && <span> • </span>}
+                              {order.variant_storage && <span>{order.variant_storage}</span>}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <p className="text-sm font-bold text-gray-900">₹{order.variant_price.toLocaleString('en-IN')}</p>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <p className="text-sm text-gray-900">{order.emi_tenure} months</p>
+                            <p className="text-xs text-gray-500">₹{order.monthly_payment.toLocaleString('en-IN')}/mo</p>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(order.status)}`}>
+                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <p className="text-sm text-gray-900">{formatDate(order.created_at)}</p>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <p className="text-sm font-semibold text-teal-600">{formatDate(order.expected_delivery_date)}</p>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}
