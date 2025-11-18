@@ -41,6 +41,7 @@ export const ProductDetail: React.FC = () => {
   const [selectedDownpayment, setSelectedDownpayment] = useState<DownpaymentOption | null>(null);
   const [mainImage, setMainImage] = useState<string>('');
   const [showSpecs, setShowSpecs] = useState(false);
+  const [availableEmiPlans, setAvailableEmiPlans] = useState<EMIPlan[]>([]);
 
   // Helper function to calculate monthly payment
   const calculateMonthlyPayment = (): number => {
@@ -62,6 +63,34 @@ export const ProductDetail: React.FC = () => {
     return Math.round(numerator / denominator);
   };
 
+  // Filter EMI plans based on variant's available plans
+  const filterEmiPlans = (variant: Variant, allPlans: EMIPlan[]) => {
+    console.log('🔍 Filtering EMI plans for variant:', variant.name);
+    console.log('📋 Available EMI Plans in variant:', variant.availableEmiPlans);
+    console.log('📦 All EMI Plans:', allPlans.map(p => `${p.id}: ${p.tenure}mo`));
+    
+    // If undefined or null, show all plans (default behavior for old products)
+    if (variant.availableEmiPlans === undefined || variant.availableEmiPlans === null) {
+      console.log('✅ No restriction - showing all plans');
+      setAvailableEmiPlans(allPlans);
+      setSelectedPlan(allPlans[0] || null);
+    }
+    // If empty array, user unchecked all - show NONE
+    else if (variant.availableEmiPlans.length === 0) {
+      console.log('❌ All plans unchecked - showing NO plans');
+      setAvailableEmiPlans([]);
+      setSelectedPlan(null);
+    } 
+    // If has specific plan IDs, filter to those
+    else {
+      console.log('🎯 Filtering to specific plans:', variant.availableEmiPlans);
+      const filtered = allPlans.filter(plan => variant.availableEmiPlans?.includes(plan.id));
+      console.log('✨ Filtered result:', filtered.map(p => `${p.id}: ${p.tenure}mo`));
+      setAvailableEmiPlans(filtered);
+      setSelectedPlan(filtered[0] || null);
+    }
+  };
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -71,9 +100,8 @@ export const ProductDetail: React.FC = () => {
           if (data.variants.length > 0) {
             setSelectedVariant(data.variants[0]);
             setMainImage(data.variants[0].image);
-          }
-          if (data.emiPlans.length > 0) {
-            setSelectedPlan(data.emiPlans[0]);
+            // Filter EMI plans for first variant
+            filterEmiPlans(data.variants[0], data.emiPlans);
           }
           if (data.downpaymentOptions && data.downpaymentOptions.length > 0) {
             setSelectedDownpayment(data.downpaymentOptions[0]);
@@ -93,6 +121,7 @@ export const ProductDetail: React.FC = () => {
   useEffect(() => {
     if (selectedPlan && selectedVariant && selectedDownpayment) {
       // Trigger recalculation by setting the plan again
+
       setSelectedPlan({ ...selectedPlan });
     }
   }, [selectedDownpayment]);
@@ -384,7 +413,7 @@ export const ProductDetail: React.FC = () => {
               <img
                 src={mainImage || selectedVariant.image}
                 alt={selectedVariant.name}
-                className="max-h-[450px] w-auto object-contain"
+                className="max-h-[450px] max-w-[400px] w-auto object-contain"
               />
             </div>
           </div>
@@ -396,7 +425,7 @@ export const ProductDetail: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900 mb-2">{product.name}</h1>
               <p className="text-sm text-gray-600">
                 {selectedVariant.color && `Color: ${selectedVariant.color}`}
-                {selectedVariant.storage && ` • Storage: ${selectedVariant.storage}GB`}
+                {selectedVariant.storage && ` • Storage: ${selectedVariant.storage} GB`}
               </p>
             </div>
 
@@ -467,6 +496,11 @@ export const ProductDetail: React.FC = () => {
                     images: imagesToUse
                   });
                   setMainImage(imagesToUse[0] || variant.image);
+                  
+                  // Filter EMI plans when variant changes
+                  if (product) {
+                    filterEmiPlans(variant, product.emiPlans);
+                  }
                 }}
               />
             </div>
@@ -474,13 +508,24 @@ export const ProductDetail: React.FC = () => {
             {/* EMI Plans */}
             <div className="pt-2 border-t border-gray-200">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">Choose EMI Tenure</h3>
-              <EMIPlanSelector
-                plans={product.emiPlans}
-                selectedPlan={selectedPlan}
-                onPlanChange={setSelectedPlan}
-                variantPrice={selectedVariant.price}
-                downpayment={selectedDownpayment?.amount || 0}
-              />
+              {availableEmiPlans.length === 0 ? (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm font-semibold text-red-800">
+                    ❌ No EMI plans available for this variant
+                  </p>
+                  <p className="text-xs text-red-600 mt-1">
+                    Please select a different variant or contact support
+                  </p>
+                </div>
+              ) : (
+                <EMIPlanSelector
+                  plans={availableEmiPlans}
+                  selectedPlan={selectedPlan}
+                  onPlanChange={setSelectedPlan}
+                  variantPrice={selectedVariant.price}
+                  downpayment={selectedDownpayment?.amount || 0}
+                />
+              )}
             </div>
 
             {/* CTA Button */}

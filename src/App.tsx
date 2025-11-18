@@ -1,8 +1,9 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ProductListing } from './pages/ProductListing';
 import { ProductDetail } from './pages/ProductDetail';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { AddProduct } from './pages/AddProduct';
+import { EditProduct } from './pages/EditProduct';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import './index.css';
@@ -17,6 +18,8 @@ function App() {
             <Route path="/" element={<ProductListing />} />
             <Route path="/products/:slug" element={<ProductDetail />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/products/add" element={<AddProduct />} />
+            <Route path="/admin/products/edit/:id" element={<EditProduct />} />
           </Routes>
         </main>
         <Footer />

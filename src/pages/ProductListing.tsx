@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProducts } from '../api/productApi';
+import { calculateMonthlyEMI } from '../utils/emiCalculator';
 
 interface Product {
   _id: string;
@@ -27,8 +28,12 @@ export const ProductListing: React.FC = () => {
     const fetchProducts = async () => {
       try {
         const data = await getProducts();
+        console.log('📦 Products fetched:', data);
+        console.log('📦 First product:', data[0]);
+        console.log('📦 First product variants:', data[0]?.variants);
         setProducts(data);
       } catch (err) {
+        console.error('❌ Error fetching products:', err);
         setError('Failed to load products');
       } finally {
         setLoading(false);
@@ -71,11 +76,21 @@ export const ProductListing: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => {
-              const defaultVariant = product.variants[0];
+              const defaultVariant = product.variants?.[0];
+              
+              // Skip if no variants
+              if (!defaultVariant) {
+                console.warn('Product has no variants:', product.name);
+                return null;
+              }
+              
               const discount = Math.round(((defaultVariant.mrp - defaultVariant.price) / defaultVariant.mrp) * 100);
               const isIPhone17Pro = product.name.includes('iPhone 17 Pro');
               const isSamsungS24 = product.name.includes('Samsung S24 Ultra');
               const isOutOfStock = (defaultVariant.stock || 0) === 0;
+              
+              // Calculate lowest monthly EMI (12 months at 1.89% gives lowest monthly payment)
+              const lowestEMI = calculateMonthlyEMI(defaultVariant.price, 1.89, 12);
   
               const imageUrl = isIPhone17Pro 
                 ? "https://images.snapmint.com/product_assets/images/001/154/792/large/open-uri20251021-2855301-1lwknri?1761017541"
@@ -139,7 +154,7 @@ export const ProductListing: React.FC = () => {
                       {isOutOfStock ? (
                         <span className="text-red-600">Currently Unavailable</span>
                       ) : (
-                        'EMI from ₹5,000/month'
+                        `EMI from ₹${lowestEMI.toLocaleString()}/month`
                       )}
                     </p>
 

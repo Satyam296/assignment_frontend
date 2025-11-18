@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -35,12 +36,14 @@ interface LowStockItem {
 }
 
 export const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [inventory, setInventory] = useState<ProductInventory[]>([]);
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<ProductInventory | null>(null);
   const [updateStock, setUpdateStock] = useState<{ [key: string]: number }>({});
   const [threshold] = useState(5);
+  const [deleteModal, setDeleteModal] = useState<{ show: boolean; productId: string; productName: string }>({ show: false, productId: '', productName: '' });
 
   useEffect(() => {
     fetchInventory();
@@ -50,10 +53,11 @@ export const AdminDashboard: React.FC = () => {
   const fetchInventory = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/admin/inventory`);
-      setInventory(response.data);
+      setInventory(response.data || []);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching inventory:', error);
+      setInventory([]);
       setLoading(false);
     }
   };
@@ -61,9 +65,10 @@ export const AdminDashboard: React.FC = () => {
   const fetchLowStockItems = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/admin/inventory/low-stock?threshold=${threshold}`);
-      setLowStockItems(response.data.items);
+      setLowStockItems(response.data || []);
     } catch (error) {
       console.error('Error fetching low stock items:', error);
+      setLowStockItems([]);
     }
   };
 
@@ -85,10 +90,23 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const totalProducts = inventory.length;
-  const totalVariants = inventory.reduce((sum, p) => sum + p.variantCount, 0);
-  const totalStock = inventory.reduce((sum, p) => sum + p.totalStock, 0);
-  const totalLowStock = lowStockItems.length;
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/products/${productId}`);
+      setDeleteModal({ show: false, productId: '', productName: '' });
+      fetchInventory();
+      fetchLowStockItems();
+      alert('Product deleted successfully!');
+    } catch (error: any) {
+      console.error('Error deleting product:', error);
+      alert(error.response?.data?.error || 'Failed to delete product');
+    }
+  };
+
+  const totalProducts = inventory?.length || 0;
+  const totalVariants = inventory?.reduce((sum, p) => sum + (p.variantCount || 0), 0) || 0;
+  const totalStock = inventory?.reduce((sum, p) => sum + (p.totalStock || 0), 0) || 0;
+  const totalLowStock = lowStockItems?.length || 0;
 
   if (loading) {
     return (
@@ -108,12 +126,20 @@ export const AdminDashboard: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
               <p className="text-sm text-gray-600">Inventory Management System</p>
             </div>
-            <a 
-              href="/" 
-              className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors text-sm font-semibold"
-            >
-              Back to Store
-            </a>
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate('/admin/products/add')}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm font-semibold"
+              >
+                + Add Product
+              </button>
+              <a 
+                href="/" 
+                className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors text-sm font-semibold"
+              >
+                Back to Store
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -197,11 +223,11 @@ export const AdminDashboard: React.FC = () => {
           <div className="divide-y divide-gray-200">
             {inventory.map((product) => (
               <div key={product._id} className="p-6">
-                <div 
-                  className="flex justify-between items-center cursor-pointer"
-                  onClick={() => setSelectedProduct(selectedProduct?._id === product._id ? null : product)}
-                >
-                  <div>
+                <div className="flex justify-between items-center">
+                  <div 
+                    className="flex-1 cursor-pointer"
+                    onClick={() => setSelectedProduct(selectedProduct?._id === product._id ? null : product)}
+                  >
                     <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
                     <p className="text-sm text-gray-600">
                       {product.variantCount} variants • Total Stock: {product.totalStock}
@@ -212,14 +238,35 @@ export const AdminDashboard: React.FC = () => {
                       )}
                     </p>
                   </div>
-                  <svg 
-                    className={`w-5 h-5 text-gray-400 transition-transform ${selectedProduct?._id === product._id ? 'rotate-180' : ''}`} 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => navigate(`/admin/products/edit/${product._id}`)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setDeleteModal({ show: true, productId: product._id, productName: product.name })}
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-semibold flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete
+                    </button>
+                    <svg 
+                      className={`w-5 h-5 text-gray-400 transition-transform cursor-pointer ${selectedProduct?._id === product._id ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                      onClick={() => setSelectedProduct(selectedProduct?._id === product._id ? null : product)}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
 
                 {selectedProduct?._id === product._id && (
@@ -278,6 +325,44 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="bg-red-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Product?</h3>
+                <p className="text-sm text-gray-600 mb-1">
+                  Are you sure you want to delete <strong>{deleteModal.productName}</strong>?
+                </p>
+                <p className="text-sm text-red-600 font-semibold">
+                  This action cannot be undone. All variants and data will be permanently removed.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteModal({ show: false, productId: '', productName: '' })}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteProduct(deleteModal.productId)}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors font-semibold"
+              >
+                Delete Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

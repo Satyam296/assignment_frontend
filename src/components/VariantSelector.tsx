@@ -10,6 +10,7 @@ export interface Variant {
   image: string;
   images?: string[];
   stock?: number;
+  availableEmiPlans?: string[];
 }
 
 interface VariantSelectorProps {
@@ -97,7 +98,7 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
                   : 'border-gray-300 text-gray-900 hover:border-primary'
               }`}
             >
-              {variant.storage}
+              {variant.storage} GB
             </button>
           ))}
         </div>

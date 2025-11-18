@@ -30,6 +30,7 @@ export const EMIPlanSelector: React.FC<EMIPlanSelectorProps> = ({
     const loanAmount = variantPrice - downpayment;
     return calculateMonthlyEMI(loanAmount, plan.interestRate, plan.tenure);
   };
+  
 
   return (
     <div className="mb-6">
