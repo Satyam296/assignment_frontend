@@ -170,59 +170,43 @@ VITE_API_BASE_URL=https://assignment-backend-1-84be.onrender.com
 npm run dev
 ```
 
-### Backend Setup
-1. Navigate to backend directory
-```bash
-cd backend
-```
-
-2. Install dependencies
-```bash
-npm install
-```
-
-3. Create a `.env` file and add:
-```
-PORT=5000
-DATABASE_URL=postgresql://username:password@localhost:5432/emi_products
-```
-
-4. Initialize the database
-```bash
-node seed.js
-```
-
-5. Start the server
-```bash
-npm start
-```
-
 ## Project Structure
 ```
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── api/
-│   │   └── utils/
-│   ├── public/
-│   └── package.json
-│
-└── backend/
-    ├── routes/
-    ├── models/
-    ├── db.js
-    ├── seed.js
-    └── package.json
+├── src/
+│   ├── components/
+│   │   ├── EMIPlanSelector.tsx
+│   │   ├── Footer.tsx
+│   │   ├── Header.tsx
+│   │   └── VariantSelector.tsx
+│   ├── pages/
+│   │   ├── AdminDashboard.tsx
+│   │   ├── ProductDetail.tsx
+│   │   └── ProductListing.tsx
+│   ├── api/
+│   │   └── productApi.ts
+│   ├── utils/
+│   │   └── emiCalculator.ts
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+├── public/
+├── .github/workflows/
+│   └── deploy.yml
+├── package.json
+└── vite.config.ts
 ```
 
 ## Deployment
 
 ### Frontend
-The frontend is deployed on GitHub Pages. Any push to the main branch triggers automatic deployment through GitHub Actions.
+The frontend is deployed on Netlify and GitHub Pages. The main branch is automatically deployed through:
+- **Netlify**: https://vermillion-strudel-6bb21d.netlify.app
+- **GitHub Pages**: https://satyam296.github.io/assignment_frontend/
+
+Any push to the main branch triggers automatic deployment through GitHub Actions.
 
 ### Backend
-[Add your backend deployment instructions]
+The backend is deployed separately on Render: https://assignment-backend-1-84be.onrender.com
 
 ## Video Demo
 [Add your video demo link]
