@@ -70,15 +70,36 @@ export const EditProduct: React.FC = () => {
       setCategory(product.category);
       setDescription(product.description || '');
       
-      // FORCE all variants to have undefined availableEmiPlans so ALL checkboxes show as CHECKED
-      const initializedVariants = (product.variants || []).map((v: Variant) => ({
-        ...v,
-        availableEmiPlans: undefined  // Force undefined = all checkboxes CHECKED
+      // Initialize variants - preserve existing stock and other data
+      const initializedVariants = (product.variants || []).map((v: any) => ({
+        id: v.id,
+        name: v.name || `${v.color} ${v.storage}`,
+        color: v.color || '',
+        storage: v.storage || '',
+        price: v.price || 0,
+        mrp: v.mrp || 0,
+        image: v.image || '',
+        images: v.images || [],
+        stock: v.stock || 0,
+        availableEmiPlans: v.available_emi_plans || undefined
       }));
       
       setVariants(initializedVariants);
-      setEmiPlans(product.emiPlans || []);
-      setSpecifications(product.specifications?.length > 0 ? product.specifications : [{ key: '', value: '' }]);
+      
+      // Fetch full product details to get EMI plans and specifications
+      if (product.slug) {
+        try {
+          const detailsResponse = await axios.get(`${API_BASE_URL}/products/${product.slug}`);
+          const fullProduct = detailsResponse.data;
+          setEmiPlans(fullProduct.emiPlans || []);
+          setSpecifications(fullProduct.specifications?.length > 0 ? fullProduct.specifications : [{ key: '', value: '' }]);
+        } catch (err) {
+          console.error('Error fetching product details:', err);
+          setEmiPlans([]);
+          setSpecifications([{ key: '', value: '' }]);
+        }
+      }
+      
       setLoading(false);
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -204,18 +225,25 @@ export const EditProduct: React.FC = () => {
         downpaymentOptions: []
       };
       
-      console.log('💾 Saving product with variants:', processedVariants.map(v => ({
+      console.log('💾 Saving product ID:', id);
+      console.log('💾 Product data:', JSON.stringify(productData, null, 2));
+      console.log('💾 EMI Plans:', emiPlans);
+      console.log('💾 Variants with EMI plans:', processedVariants.map(v => ({
         name: v.name,
         availableEmiPlans: v.availableEmiPlans
       })));
       
-      await axios.put(`${API_BASE_URL}/products/${id}`, productData);
+      const response = await axios.put(`${API_BASE_URL}/products/${id}`, productData);
+      console.log('✅ Update response:', response.data);
       
       alert('Product updated successfully!');
       navigate('/admin');
     } catch (error: any) {
-      console.error('Error updating product:', error);
-      alert(error.response?.data?.error || 'Failed to update product');
+      console.error('❌ Error updating product:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      const errorMessage = error.response?.data?.details || error.response?.data?.error || error.message || 'Failed to update product';
+      alert(`Failed to update product: ${errorMessage}`);
     } finally {
       setSaving(false);
     }
