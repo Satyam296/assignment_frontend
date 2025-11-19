@@ -57,7 +57,7 @@ export const EditProduct: React.FC = () => {
   const fetchProduct = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/products`);
-      const product = response.data.find((p: any) => p._id === id);
+      const product = response.data.find((p: any) => p.id === id || p._id === id);
       
       if (!product) {
         alert('Product not found');
