@@ -70,31 +70,56 @@ export const EditProduct: React.FC = () => {
       setCategory(product.category);
       setDescription(product.description || '');
       
-      // Initialize variants - preserve existing stock and other data
-      const initializedVariants = (product.variants || []).map((v: any) => ({
-        id: v.id,
-        name: v.name || `${v.color} ${v.storage}`,
-        color: v.color || '',
-        storage: v.storage || '',
-        price: v.price || 0,
-        mrp: v.mrp || 0,
-        image: v.image || '',
-        images: v.images || [],
-        stock: v.stock || 0,
-        availableEmiPlans: v.available_emi_plans || undefined
-      }));
-      
-      setVariants(initializedVariants);
-      
-      // Fetch full product details to get EMI plans and specifications
+      // Fetch full product details to get EMI plans, specifications, and complete variant info
       if (product.slug) {
         try {
           const detailsResponse = await axios.get(`${API_BASE_URL}/products/${product.slug}`);
           const fullProduct = detailsResponse.data;
+          
+          console.log('📦 Full product loaded:', fullProduct.name);
+          console.log('📋 Variants with EMI plans:', fullProduct.variants.map((v: any) => ({
+            name: v.name,
+            availableEmiPlans: v.availableEmiPlans
+          })));
+          
+          // Initialize variants from full product details - preserve existing stock and availableEmiPlans
+          const initializedVariants = (fullProduct.variants || []).map((v: any) => ({
+            id: v.id,
+            name: v.name || `${v.color} ${v.storage}`,
+            color: v.color || '',
+            storage: v.storage || '',
+            price: v.price || 0,
+            mrp: v.mrp || 0,
+            image: v.image || '',
+            images: v.images || [],
+            stock: v.stock || 0,
+            availableEmiPlans: v.availableEmiPlans || undefined
+          }));
+          
+          console.log('✅ Initialized variants:', initializedVariants.map(v => ({
+            name: v.name,
+            availableEmiPlans: v.availableEmiPlans
+          })));
+          
+          setVariants(initializedVariants);
           setEmiPlans(fullProduct.emiPlans || []);
           setSpecifications(fullProduct.specifications?.length > 0 ? fullProduct.specifications : [{ key: '', value: '' }]);
         } catch (err) {
           console.error('Error fetching product details:', err);
+          // Fallback to basic variant info
+          const initializedVariants = (product.variants || []).map((v: any) => ({
+            id: v.id,
+            name: v.name || `${v.color} ${v.storage}`,
+            color: v.color || '',
+            storage: v.storage || '',
+            price: v.price || 0,
+            mrp: v.mrp || 0,
+            image: v.image || '',
+            images: v.images || [],
+            stock: v.stock || 0,
+            availableEmiPlans: v.availableEmiPlans || undefined
+          }));
+          setVariants(initializedVariants);
           setEmiPlans([]);
           setSpecifications([{ key: '', value: '' }]);
         }
