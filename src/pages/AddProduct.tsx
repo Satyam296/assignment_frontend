@@ -185,8 +185,7 @@ export const AddProduct: React.FC = () => {
         description,
         variants: processedVariants,
         emiPlans,
-        specifications: specifications.filter(s => s.key && s.value),
-        downpaymentOptions: []
+        specifications: specifications.filter(s => s.key && s.value)
       };
       
       await axios.post(`${API_BASE_URL}/products`, productData);

@@ -221,8 +221,7 @@ export const EditProduct: React.FC = () => {
         description,
         variants: processedVariants,
         emiPlans,
-        specifications: specifications.filter(s => s.key && s.value),
-        downpaymentOptions: []
+        specifications: specifications.filter(s => s.key && s.value)
       };
       
       console.log('💾 Saving product ID:', id);
