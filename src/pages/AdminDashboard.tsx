@@ -14,7 +14,7 @@ interface VariantInventory {
 }
 
 interface ProductInventory {
-  _id: string;
+  id: string;
   slug: string;
   name: string;
   category: string;
@@ -301,11 +301,11 @@ export const AdminDashboard: React.FC = () => {
           </div>
           <div className="divide-y divide-gray-200">
             {inventory.map((product) => (
-              <div key={product._id} className="p-6">
+              <div key={product.id} className="p-6">
                 <div className="flex justify-between items-center">
                   <div 
                     className="flex-1 cursor-pointer"
-                    onClick={() => setSelectedProduct(selectedProduct?._id === product._id ? null : product)}
+                    onClick={() => setSelectedProduct(selectedProduct?.id === product.id ? null : product)}
                   >
                     <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
                     <p className="text-sm text-gray-600">
@@ -319,7 +319,7 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => navigate(`/admin/products/edit/${product._id}`)}
+                      onClick={() => navigate(`/admin/products/edit/${product.id}`)}
                       className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -328,7 +328,7 @@ export const AdminDashboard: React.FC = () => {
                       Edit
                     </button>
                     <button
-                      onClick={() => setDeleteModal({ show: true, productId: product._id, productName: product.name })}
+                      onClick={() => setDeleteModal({ show: true, productId: product.id, productName: product.name })}
                       className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-semibold flex items-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -337,18 +337,18 @@ export const AdminDashboard: React.FC = () => {
                       Delete
                     </button>
                     <svg 
-                      className={`w-5 h-5 text-gray-400 transition-transform cursor-pointer ${selectedProduct?._id === product._id ? 'rotate-180' : ''}`} 
+                      className={`w-5 h-5 text-gray-400 transition-transform cursor-pointer ${selectedProduct?.id === product.id ? 'rotate-180' : ''}`} 
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
-                      onClick={() => setSelectedProduct(selectedProduct?._id === product._id ? null : product)}
+                      onClick={() => setSelectedProduct(selectedProduct?.id === product.id ? null : product)}
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
                 </div>
 
-                {selectedProduct?._id === product._id && (
+                {selectedProduct?.id === product.id && (
                   <div className="mt-4 space-y-3">
                     {product.variants.map((variant) => (
                       <div 
@@ -376,18 +376,18 @@ export const AdminDashboard: React.FC = () => {
                               type="number"
                               min="0"
                               placeholder={variant.stock.toString()}
-                              value={updateStock[`${product._id}-${variant.id}`] || ''}
+                              value={updateStock[`${product.id}-${variant.id}`] || ''}
                               onChange={(e) => setUpdateStock({
                                 ...updateStock,
-                                [`${product._id}-${variant.id}`]: parseInt(e.target.value) || 0
+                                [`${product.id}-${variant.id}`]: parseInt(e.target.value) || 0
                               })}
                               className="w-24 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                             />
                             <button
                               onClick={() => handleUpdateStock(
-                                product._id,
+                                product.id,
                                 variant.id,
-                                updateStock[`${product._id}-${variant.id}`] || variant.stock
+                                updateStock[`${product.id}-${variant.id}`] || variant.stock
                               )}
                               className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors text-sm font-semibold"
                             >
