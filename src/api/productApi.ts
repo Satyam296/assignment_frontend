@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Use relative path for local dev (proxied by Vite), fallback to direct URL for production
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? '/api' : 'https://assignment-backend-2-tt6x.onrender.com/api');
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? '/api' : 'https://assignment-backend-3-8rm5.onrender.com/api');
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
